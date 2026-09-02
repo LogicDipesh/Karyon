@@ -25,8 +25,9 @@ and allocation logic are generic and easy to re-seed with new data.
 - **Resource Status panel** — live available / busy / unavailable counts per resource type, with a
   click-to-expand **drill-down** listing every individual unit and, for busy units, which incident they're
   assigned to and the dispatch distance
-- **Simulate / Reset** — one "what if" scenario (Ambulance A02 goes out of service) that re-runs
-  allocation and diffs what changed, plus a reset to restore the initial state
+- **Simulate / Reset** — open a resource picker to mark any combination of ambulances, NDRF teams,
+  or fire units as unavailable, re-run allocation, and diff what changed. Reset restores the
+  initial state
 - **Explanable, transparent logic** — scoring formula and greedy allocation are simple, in-code, and
   visible in the UI
 
@@ -141,9 +142,19 @@ Navigate to **http://127.0.0.1:8000** in any browser.
 - **Click a busy unit** to highlight that incident's card and map marker.
 
 ### Simulate & Reset
-- **Simulate** marks Ambulance A02 unavailable and re-runs allocation. The dashboard highlights
-  reassigned incidents (amber) and shows a diff like `↻ Fatima Begum (Pregnant, Medical): A02 → N01`.
-- **Reset** reloads the seed data and restores the initial state (re-enables Simulate).
+- Click **Simulate** to open the resource picker. The picker groups every dispatchable resource
+  by category (Ambulances, NDRF Teams, Fire Units) — Hospitals are shown for reference but cannot
+  be selected.
+- **Click individual resource buttons** to mark them unavailable (red tint). Click again to deselect.
+  Pre-marked unavailable units from a previous run stay selected on re-open.
+- Click **Run Allocation** to POST the selection to `/api/allocate` and re-run the greedy allocator.
+  The dashboard highlights reassigned incidents (amber) and shows a diff like
+  `↻ Fatima Begum (Pregnant, Medical): A02 → N01`.
+- Click **Clear** to deselect everything, or **Cancel** to close the picker without running.
+- An empty selection is allowed: it re-runs the allocator with all resources available (useful to
+  re-diff after external state changes).
+- **Reset** reloads the seed data and restores the initial state (re-enables Simulate and clears
+  the changes display).
 
 ---
 
@@ -154,7 +165,8 @@ Base URL: `http://127.0.0.1:8000`
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/api/state` | Full current state: incidents (scored + assigned), resources (statuses), zone polygon, assignments |
-| `POST` | `/api/simulate` | Mark A02 unavailable, re-run allocation, return `{ state, changes }` |
+| `POST` | `/api/simulate` | **Backward-compatible.** Marks Ambulance A02 unavailable, re-runs allocation, returns `{ state, changes, unavailable_resource_ids }` |
+| `POST` | `/api/allocate` | Mark any set of resources unavailable, re-run allocation. Body: `{"unavailable_resource_ids": ["A02", "N01"]}`. Returns `{ state, changes, unavailable_resource_ids }`. Hospital IDs in the list are ignored |
 | `POST` | `/api/reset` | Re-seed from `data.json`, recompute everything, return fresh `state` |
 
 Example:
@@ -162,6 +174,9 @@ Example:
 ```bash
 curl http://127.0.0.1:8000/api/state
 curl -X POST http://127.0.0.1:8000/api/simulate
+curl -X POST -H "Content-Type: application/json" \
+     -d '{"unavailable_resource_ids":["A02","N01","F01"]}' \
+     http://127.0.0.1:8000/api/allocate
 curl -X POST http://127.0.0.1:8000/api/reset
 ```
 

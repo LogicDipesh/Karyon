@@ -37,6 +37,9 @@ async function init() {
     await loadState();
     document.getElementById("simulate-btn").addEventListener("click", onSimulate);
     document.getElementById("reset-btn").addEventListener("click", onReset);
+    document.getElementById("picker-cancel-btn").addEventListener("click", hidePicker);
+    document.getElementById("picker-clear-btn").addEventListener("click", clearPickerSelection);
+    document.getElementById("picker-run-btn").addEventListener("click", runPickerAllocation);
 }
 
 function initMap() {
@@ -448,44 +451,161 @@ function toggleResourceDrilldown(type) {
 }
 
 // ----- Simulate -----
-async function onSimulate() {
-    var btn = document.getElementById("simulate-btn");
-    btn.disabled = true;
-    btn.textContent = "Simulating…";
+const PICKER_TYPES = ["ambulance", "ndrf", "fire", "hospital"];
+
+function onSimulate() {
+    showPicker();
+}
+
+function showPicker() {
+    const picker = document.getElementById("resource-picker");
+    if (!picker) return;
+    renderPicker();
+    picker.classList.remove("hidden");
+    document.getElementById("simulate-btn").disabled = true;
+}
+
+function hidePicker() {
+    const picker = document.getElementById("resource-picker");
+    if (!picker) return;
+    picker.classList.add("hidden");
+    document.getElementById("simulate-btn").disabled = false;
+}
+
+function renderPicker() {
+    const container = document.getElementById("picker-categories");
+    if (!container || !currentState) return;
+    container.innerHTML = "";
+
+    PICKER_TYPES.forEach(function (type) {
+        const ofType = currentState.resources.filter(function (r) {
+            return r.type === type;
+        });
+        if (ofType.length === 0) return;
+
+        const group = document.createElement("div");
+        group.className = "picker-category";
+
+        const header = document.createElement("div");
+        header.className = "picker-category-header";
+        header.style.borderLeftColor = RESOURCE_COLORS[type] || "#95a5a6";
+        header.innerHTML =
+            '<span class="picker-category-label" style="color:' +
+            (RESOURCE_COLORS[type] || "#95a5a6") +
+            '">' +
+            RESOURCE_LABELS[type] +
+            "</span>" +
+            '<span class="picker-category-count">' + ofType.length + "</span>";
+
+        const buttons = document.createElement("div");
+        buttons.className = "picker-buttons";
+
+        ofType.forEach(function (res) {
+            const btn = document.createElement("button");
+            btn.className = "picker-resource-btn";
+            btn.type = "button";
+            btn.dataset.resourceId = res.id;
+            btn.dataset.resourceType = res.type;
+            const statusClass = "picker-status-" + res.status;
+            btn.innerHTML =
+                '<span class="picker-resource-id">' + escapeHtml(res.id) + "</span>" +
+                '<span class="picker-resource-status ' + statusClass + '">' +
+                res.status + "</span>";
+
+            if (res.status === "unavailable") {
+                btn.classList.add("selected");
+            }
+            if (res.type === "hospital") {
+                btn.classList.add("picker-hospital-disabled");
+                btn.title = "Hospitals are not dispatchable";
+                btn.disabled = true;
+            }
+
+            btn.addEventListener("click", function () {
+                if (btn.disabled) return;
+                btn.classList.toggle("selected");
+            });
+
+            buttons.appendChild(btn);
+        });
+
+        group.appendChild(header);
+        group.appendChild(buttons);
+        container.appendChild(group);
+    });
+}
+
+function clearPickerSelection() {
+    const container = document.getElementById("picker-categories");
+    if (!container) return;
+    container.querySelectorAll(".picker-resource-btn.selected").forEach(function (b) {
+        b.classList.remove("selected");
+    });
+}
+
+function getSelectedUnavailableIds() {
+    const container = document.getElementById("picker-categories");
+    if (!container) return [];
+    const ids = [];
+    container.querySelectorAll(".picker-resource-btn.selected").forEach(function (b) {
+        if (!b.disabled) ids.push(b.dataset.resourceId);
+    });
+    return ids;
+}
+
+async function runPickerAllocation() {
+    const ids = getSelectedUnavailableIds();
+    const runBtn = document.getElementById("picker-run-btn");
+    runBtn.disabled = true;
+    runBtn.textContent = "Running…";
 
     try {
-        var res = await fetch("/api/simulate", { method: "POST" });
-        var result = await res.json();
+        const res = await fetch("/api/allocate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ unavailable_resource_ids: ids }),
+        });
+        const result = await res.json();
 
         currentState = result.state;
         highlightedIncidentId = null;
-        renderAll(result.state, result.changes);
+        renderAll(currentState, result.changes);
 
-        // Update button states
-        btn.textContent = "A02 Marked Unavailable";
-        document.getElementById("reset-btn").disabled = false;
+        // Reflect the new statuses in the picker buttons
+        renderPicker();
 
         // Show changes summary
-        var changesDiv = document.getElementById("changes-display");
-        if (result.changes.length > 0) {
+        const changesDiv = document.getElementById("changes-display");
+        if (result.changes && result.changes.length > 0) {
             changesDiv.innerHTML = result.changes
                 .map(function (c) {
                     return (
                         "↻ " +
                         escapeHtml(c.incident_name) + ": " +
-                        c.old_resource_id +
+                        (c.old_resource_id || "Unassigned") +
                         " → " +
                         (c.new_resource_id || "Unassigned")
                     );
                 })
                 .join("<br>");
         } else {
-            changesDiv.textContent = "No reassignments needed.";
+            changesDiv.innerHTML =
+                '<span class="picker-no-change">No reassignments needed.</span>';
         }
+
+        // Update simulate button label to reflect selection
+        const simBtn = document.getElementById("simulate-btn");
+        if (ids.length === 0) {
+            simBtn.textContent = "Simulate Resource Unavailable";
+        } else {
+            simBtn.textContent = "Simulate (" + ids.length + " down)";
+        }
+        document.getElementById("reset-btn").disabled = false;
     } catch (err) {
-        btn.textContent = "Simulate: Ambulance A02 Unavailable";
-        btn.disabled = false;
-        console.error("Simulate failed:", err);
+        console.error("Allocate failed:", err);
+    } finally {
+        runBtn.disabled = false;
+        runBtn.textContent = "Run Allocation";
     }
 }
 
@@ -503,9 +623,15 @@ async function onReset() {
 
         // Restore buttons
         document.getElementById("simulate-btn").textContent =
-            "Simulate: Ambulance A02 Unavailable";
+            "Simulate Resource Unavailable";
         document.getElementById("simulate-btn").disabled = false;
         document.getElementById("changes-display").innerHTML = "";
+
+        // Refresh the picker (in case it is open)
+        const picker = document.getElementById("resource-picker");
+        if (picker && !picker.classList.contains("hidden")) {
+            renderPicker();
+        }
     } catch (err) {
         resetBtn.disabled = false;
         console.error("Reset failed:", err);

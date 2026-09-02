@@ -472,6 +472,183 @@ html, body {
     line-height: 1.6;
 }
 
+/* --- Resource Picker (under Simulate button) --- */
+.hidden {
+    display: none !important;
+}
+
+.resource-picker {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.picker-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin: 0;
+}
+
+#picker-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.picker-category {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+}
+
+.picker-category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 3px solid var(--text-muted);
+    padding-left: 8px;
+    margin-bottom: 6px;
+}
+
+.picker-category-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.picker-category-count {
+    font-size: 10px;
+    color: var(--text-muted);
+    background: var(--bg-primary);
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.picker-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.picker-resource-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    font-variant-numeric: tabular-nums;
+}
+
+.picker-resource-btn:hover:not(:disabled) {
+    background: var(--bg-secondary);
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+}
+
+.picker-resource-btn.selected {
+    background: rgba(231, 76, 60, 0.18);
+    border-color: var(--incident-red);
+    color: var(--incident-red);
+}
+
+.picker-resource-btn.selected .picker-resource-status {
+    color: var(--incident-red);
+}
+
+.picker-resource-btn:disabled,
+.picker-resource-btn.picker-hospital-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.picker-resource-status {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding: 1px 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.picker-status-available {
+    color: var(--available-green);
+}
+
+.picker-status-busy {
+    color: var(--busy-orange);
+}
+
+.picker-status-unavailable {
+    color: var(--unavailable-grey);
+}
+
+.picker-actions {
+    display: flex;
+    gap: 6px;
+    padding-top: 4px;
+    border-top: 1px solid var(--border);
+}
+
+.picker-actions button {
+    flex: 1;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+#picker-run-btn {
+    background: var(--amber);
+    color: #1a1a1a;
+    border: none;
+}
+
+#picker-run-btn:hover:not(:disabled) {
+    background: var(--amber-dark);
+}
+
+#picker-run-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#picker-clear-btn,
+#picker-cancel-btn {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+#picker-clear-btn:hover,
+#picker-cancel-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--text-muted);
+}
+
+.picker-no-change {
+    color: var(--text-muted);
+}
+
 /* --- Loading State --- */
 .loading-message {
     text-align: center;
