@@ -210,14 +210,6 @@ Simulate and reset **re-run this whole loop from scratch** on the current datase
 
 ---
 
-## Documentation
-
-- **[resq-antigravity-brief.md](resq-antigravity-brief.md)** — the original build brief / spec
-- **[implementation_plan.md](implementation_plan.md)** — the technical build plan
-- **[completion-report.md](completion-report.md)** — post-build summary
-
----
-
 ## License
 
 This project is provided as a demo/hackathon build. You are free to use and modify it for your own
