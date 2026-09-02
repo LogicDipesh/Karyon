@@ -1,6 +1,6 @@
 # ResQ — AI-Assisted Disaster Response Coordination
 
-![Status](https://img.shields.io/badge/status-demo-ready-2ecc71) ![Python](https://img.shields.io/badge/Python-3.10%2B-3498db) ![FastAPI](https://img.shields.io/badge/FastAPI-2ecc71)
+![Python](https://img.shields.io/badge/Python-3.10%2B-3498db) ![FastAPI](https://img.shields.io/badge/FastAPI-2ecc71)
 
 ResQ is a decision-support dashboard for disaster-response coordinators. It takes a set of
 incoming emergency incidents, scores and ranks them by priority, and allocates available response
