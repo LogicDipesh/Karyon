@@ -1,0 +1,171 @@
+{
+  "zone_polygon": [
+    [28.6900, 77.2200],
+    [28.6950, 77.2800],
+    [28.6800, 77.3200],
+    [28.6400, 77.3100],
+    [28.6100, 77.2900],
+    [28.6050, 77.2400],
+    [28.6300, 77.2150]
+  ],
+  "incidents": [
+    {
+      "id": "INC-001",
+      "name": "Ramesh Kumar (Elderly, Trapped)",
+      "description": "72-year-old man trapped on second floor of flooded residence in Mayur Vihar. Water level rising. Has mobility issues and cannot swim. Wife is with him.",
+      "lat": 28.6308,
+      "lng": 77.2973,
+      "medical_emergency": false,
+      "trapped": true,
+      "people_affected": 2,
+      "vulnerable_count": 1,
+      "severity": 4
+    },
+    {
+      "id": "INC-002",
+      "name": "Priya Sharma (Injured, Stranded)",
+      "description": "28-year-old woman with leg fracture stranded on collapsed bridge debris near Old Yamuna Bridge. Bleeding and unable to move. Two others with her.",
+      "lat": 28.6660,
+      "lng": 77.2370,
+      "medical_emergency": true,
+      "trapped": true,
+      "people_affected": 3,
+      "vulnerable_count": 0,
+      "severity": 4
+    },
+    {
+      "id": "INC-003",
+      "name": "Fatima Begum (Pregnant, Medical)",
+      "description": "32-year-old woman, 8 months pregnant, experiencing contractions in Geeta Colony. Nearest hospital road is flooded. Needs immediate medical transport.",
+      "lat": 28.6520,
+      "lng": 77.2700,
+      "medical_emergency": true,
+      "trapped": false,
+      "people_affected": 2,
+      "vulnerable_count": 1,
+      "severity": 5
+    },
+    {
+      "id": "INC-004",
+      "name": "Arjun Mehta (Stranded, Flooded Road)",
+      "description": "Family of 6 including 2 children stranded in car on NH-24 underpass near Pragati Maidan. Water at waist level and rising. Vehicle engine dead.",
+      "lat": 28.6280,
+      "lng": 77.2500,
+      "medical_emergency": false,
+      "trapped": false,
+      "people_affected": 6,
+      "vulnerable_count": 2,
+      "severity": 3
+    },
+    {
+      "id": "INC-005",
+      "name": "Sunita Devi (Diabetic, Needs Insulin)",
+      "description": "55-year-old diabetic woman in Laxmi Nagar, insulin supply destroyed by flooding. Blood sugar critically high. On rooftop with one family member.",
+      "lat": 28.6310,
+      "lng": 77.2780,
+      "medical_emergency": true,
+      "trapped": false,
+      "people_affected": 1,
+      "vulnerable_count": 1,
+      "severity": 4
+    }
+  ],
+  "resources": [
+    {
+      "id": "A01",
+      "type": "ambulance",
+      "lat": 28.6350,
+      "lng": 77.2450,
+      "status": "available",
+      "capacity": 4
+    },
+    {
+      "id": "A02",
+      "type": "ambulance",
+      "lat": 28.6480,
+      "lng": 77.2750,
+      "status": "available",
+      "capacity": 4
+    },
+    {
+      "id": "A03",
+      "type": "ambulance",
+      "lat": 28.6700,
+      "lng": 77.2420,
+      "status": "available",
+      "capacity": 4
+    },
+    {
+      "id": "A04",
+      "type": "ambulance",
+      "lat": 28.6230,
+      "lng": 77.2850,
+      "status": "available",
+      "capacity": 4
+    },
+    {
+      "id": "A05",
+      "type": "ambulance",
+      "lat": 28.6380,
+      "lng": 77.2350,
+      "status": "available",
+      "capacity": 4
+    },
+    {
+      "id": "N01",
+      "type": "ndrf",
+      "lat": 28.6580,
+      "lng": 77.2580,
+      "status": "available",
+      "capacity": 15
+    },
+    {
+      "id": "N02",
+      "type": "ndrf",
+      "lat": 28.6200,
+      "lng": 77.2600,
+      "status": "available",
+      "capacity": 15
+    },
+    {
+      "id": "F01",
+      "type": "fire",
+      "lat": 28.6450,
+      "lng": 77.2500,
+      "status": "available",
+      "capacity": 8
+    },
+    {
+      "id": "F02",
+      "type": "fire",
+      "lat": 28.6350,
+      "lng": 77.2900,
+      "status": "available",
+      "capacity": 8
+    },
+    {
+      "id": "H01",
+      "type": "hospital",
+      "lat": 28.6362,
+      "lng": 77.2395,
+      "status": "available",
+      "capacity": 200
+    },
+    {
+      "id": "H02",
+      "type": "hospital",
+      "lat": 28.6868,
+      "lng": 77.3107,
+      "status": "available",
+      "capacity": 300
+    },
+    {
+      "id": "H03",
+      "type": "hospital",
+      "lat": 28.6298,
+      "lng": 77.2878,
+      "status": "available",
+      "capacity": 150
+    }
+  ]
+}

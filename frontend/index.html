@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ResQ — AI-Assisted Disaster Response Coordination Dashboard for Delhi Flood scenario">
+    <title>ResQ — Disaster Response Coordinator</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header id="header">
+        <div class="header-content">
+            <div class="header-title">
+                <h1>ResQ</h1>
+                <span class="header-subtitle">Disaster Response Coordinator</span>
+            </div>
+            <p class="disclaimer">
+                Priority scores are computed from a configurable response policy,
+                not a validated medical or scientific ranking.
+                A human coordinator makes the final call.
+            </p>
+        </div>
+    </header>
+
+    <main id="dashboard">
+        <section id="map-container">
+            <div id="map"></div>
+        </section>
+
+        <aside id="panel">
+            <section class="panel-section" id="incident-section">
+                <h2 class="section-title">Priority Incidents</h2>
+                <div id="incident-list">
+                    <p class="loading-message">Loading incidents…</p>
+                </div>
+            </section>
+
+            <section class="panel-section" id="resource-section">
+                <h2 class="section-title">Resource Status</h2>
+                <div id="resource-status">
+                    <p class="loading-message">Loading resources…</p>
+                </div>
+            </section>
+
+            <section class="panel-section" id="simulate-section">
+                <h2 class="section-title">Simulation</h2>
+                <div id="simulate-panel">
+                    <div class="sim-buttons">
+                        <button id="simulate-btn">Simulate: Ambulance A02 Unavailable</button>
+                        <button id="reset-btn" disabled>Reset</button>
+                    </div>
+                    <div id="changes-display"></div>
+                </div>
+            </section>
+        </aside>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="app.js"></script>
+
+</body>
+</html>
