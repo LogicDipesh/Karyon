@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 import sys
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 
@@ -83,20 +83,37 @@ def get_state():
 
 @app.post("/api/simulate")
 def simulate():
-    """Mark Ambulance A02 unavailable, re-run allocation, return diff."""
+    """Backward-compatible hardcoded sim: marks A02 unavailable."""
+    return _run_allocation_with_unavailable(["A02"])
+
+
+@app.post("/api/allocate")
+async def allocate_endpoint(request: Request):
+    """Mark the given resource IDs unavailable, re-run allocation, return diff.
+
+    Request body: {"unavailable_resource_ids": ["A02", "N01"]}
+    Hospitals are not dispatchable; if listed they are ignored.
+    """
+    body = await request.json()
+    unavailable_ids = body.get("unavailable_resource_ids", []) or []
+    return _run_allocation_with_unavailable(unavailable_ids)
+
+
+def _run_allocation_with_unavailable(unavailable_ids):
+    """Shared implementation for /api/simulate and /api/allocate."""
     # Snapshot old assignments for diffing
     old_map = {a["incident_id"]: a["resource_id"] for a in state["assignments"]}
 
-    # Mark A02 unavailable
+    # Reset all dispatchable resources to available first
     for res in state["resources"]:
-        if res["id"] == "A02":
-            res["status"] = "unavailable"
-            break
-
-    # Reset all busy resources to available (full re-run per Section 7)
-    for res in state["resources"]:
-        if res["status"] == "busy":
+        if res["type"] != "hospital":
             res["status"] = "available"
+
+    # Mark the requested resources as unavailable
+    unavailable_set = set(unavailable_ids)
+    for res in state["resources"]:
+        if res["id"] in unavailable_set and res["type"] != "hospital":
+            res["status"] = "unavailable"
 
     # Clear incident assignments
     for inc in state["incidents"]:
@@ -108,9 +125,9 @@ def simulate():
 
     # Compute diff
     new_map = {a["incident_id"]: a["resource_id"] for a in assignments}
-    all_ids = set(list(old_map.keys()) + list(new_map.keys()))
+    all_inc_ids = set(list(old_map.keys()) + list(new_map.keys()))
     changes = []
-    for inc_id in all_ids:
+    for inc_id in all_inc_ids:
         old_res = old_map.get(inc_id)
         new_res = new_map.get(inc_id)
         if old_res != new_res:
@@ -122,7 +139,11 @@ def simulate():
                 "new_resource_id": new_res,
             })
 
-    return {"state": state, "changes": changes}
+    return {
+        "state": state,
+        "changes": changes,
+        "unavailable_resource_ids": sorted(unavailable_set),
+    }
 
 
 @app.post("/api/reset")

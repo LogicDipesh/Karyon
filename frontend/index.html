@@ -48,8 +48,17 @@
                 <h2 class="section-title">Simulation</h2>
                 <div id="simulate-panel">
                     <div class="sim-buttons">
-                        <button id="simulate-btn">Simulate: Ambulance A02 Unavailable</button>
+                        <button id="simulate-btn">Simulate Resource Unavailable</button>
                         <button id="reset-btn" disabled>Reset</button>
+                    </div>
+                    <div id="resource-picker" class="resource-picker hidden">
+                        <p class="picker-hint">Select resources to mark unavailable, then run allocation.</p>
+                        <div id="picker-categories"></div>
+                        <div class="picker-actions">
+                            <button id="picker-run-btn" class="primary">Run Allocation</button>
+                            <button id="picker-clear-btn">Clear</button>
+                            <button id="picker-cancel-btn">Cancel</button>
+                        </div>
                     </div>
                     <div id="changes-display"></div>
                 </div>
