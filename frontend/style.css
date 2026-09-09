@@ -160,6 +160,11 @@ html, body {
     box-shadow: inset 3px 0 0 var(--amber);
 }
 
+.incident-card.active {
+    border-color: var(--text-secondary);
+    box-shadow: inset 3px 0 0 var(--text-secondary);
+}
+
 .incident-header {
     display: flex;
     align-items: center;
