@@ -17,8 +17,9 @@ and allocation logic are generic and easy to re-seed with new data.
 ## Features
 
 - **Interactive map** (Leaflet + OpenStreetMap tiles, no API key)
-  - Red incident markers, colored resource markers by type, dashed assignment lines
-  - Flood-zone polygon overlay
+  - Red incident markers, colored resource markers by type, flood-zone polygon overlay
+  - **Click-to-highlight assignment routes** — click an incident or resource to draw the dashed
+    route path to its allocated partner (colored by resource type)
   - Click a marker for a popup with details
 - **Priority Incidents panel** — incidents ranked highest-first, each expandable to show a plain-language
   score breakdown and its assigned resource
@@ -41,7 +42,7 @@ and allocation logic are generic and easy to re-seed with new data.
 | Data | JSON seed file | `backend/data.json`, no database |
 | Frontend | Plain HTML / CSS / JS | Dark theme, flat panels |
 | Map | Leaflet 1.9.4 + OSM tiles | Only external CDN (free, no key) |
-| Distance | Haversine (straight-line) | No routing/GSM API |
+| Distance | Haversine (straight-line); visual waypoints are client-side math | No routing/GSM API |
 
 **Only two Python dependencies:** `fastapi` and `uvicorn[standard]`.
 
@@ -58,12 +59,9 @@ resq/
 │   └── data.json          # Seed data: incidents, resources, zone polygon
 ├── frontend/
 │   ├── index.html         # Single-page dashboard shell
-│   ├── app.js             # Map + panel rendering, simulate/reset logic
+│   ├── app.js             # Map + panels, simulate/reset, click-to-highlight routes
 │   └── style.css          # Dark theme, flat panels, layout
-├── requirements.txt       # fastapi, uvicorn[standard]
-├── implementation_plan.md # Original build plan
-├── resq-antigravity-brief.md # Build brief / spec
-└── completion-report.md   # Post-build summary
+└── requirements.txt       # fastapi, uvicorn[standard]
 ```
 
 ---
@@ -124,14 +122,19 @@ Navigate to **http://127.0.0.1:8000** in any browser.
 ### Map
 - **Red circles** are incidents; **blue/green/orange/white** circles are ambulances / NDRF / fire /
   hospitals. A **grey, faded** resource is *unavailable*.
-- **Dashed colored lines** connect each incident to its allocated resource.
 - Click any marker for a popup.
+- **Click an incident or resource** — its card, a panel row, or a map marker — to highlight it and
+  draw a **dashed route path** to its allocated partner. The path bends through two intermediate
+  waypoints (computed client-side, no routing API) and is colored by the resource type.
+- **Click the same item again**, or click an empty map area, to clear the route. Unassigned
+  incidents highlight without a path.
 
 ### Priority Incidents
 - Incidents are sorted by priority score, highest first.
 - **Click a card header** to expand its score breakdown (each term with its `+value`), the **Total**,
   and the **assigned resource + distance**.
-- Clicking a card also highlights that incident's marker on the map.
+- Clicking a card also highlights that incident's marker on the map and draws the route path to its
+  assigned resource; click again to clear.
 
 ### Resource Status (drill-down)
 - Four rows — Ambulances, NDRF Teams, Fire Units, Hospitals — each with live counts.
@@ -139,7 +142,7 @@ Navigate to **http://127.0.0.1:8000** in any browser.
   - *Available* unit → shows `Available`
   - *Busy* unit → shows the incident it's assigned to and distance, e.g. `A02 → Fatima Begum (Pregnant, Medical), 0.66 km`
   - *Unavailable* (after simulate) → shows `Unavailable`
-- **Click a busy unit** to highlight that incident's card and map marker.
+- **Click a busy unit** to highlight that incident's card and map marker and draw the dispatch route.
 
 ### Simulate & Reset
 - Click **Simulate** to open the resource picker. The picker groups every dispatchable resource
@@ -222,6 +225,7 @@ Simulate and reset **re-run this whole loop from scratch** on the current datase
 | Map tiles don't load | Offline/blocked network. Pre-load the page once while online so tiles cache. |
 | Leaflet error `Cannot read properties of undefined (reading 'min')` | This was a known bug, now fixed. Make sure you have the latest `app.js` (it sets an initial map view before rendering layers). |
 | Nothing loads and panels say "Loading…" forever | Hard-refresh (`Ctrl+Shift+R`). If a browser extension injects a strict CSP, try an incognito window or disable the extension. |
+| Clicking incidents doesn't draw assignment routes | Browser is serving a cached old `app.js` — hard-refresh (`Ctrl+Shift+R`) or open in an incognito window once. |
 
 ---
 

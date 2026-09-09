@@ -40,6 +40,14 @@ async function init() {
     document.getElementById("picker-cancel-btn").addEventListener("click", hidePicker);
     document.getElementById("picker-clear-btn").addEventListener("click", clearPickerSelection);
     document.getElementById("picker-run-btn").addEventListener("click", runPickerAllocation);
+
+    document.getElementById("panel").addEventListener("click", function (e) {
+        if (!e.target.closest(".incident-header") && !e.target.closest(".resource-unit-row")) {
+            if (highlightedIncidentId) {
+                highlightMarker(highlightedIncidentId);
+            }
+        }
+    });
 }
 
 function initMap() {
@@ -60,6 +68,12 @@ function initMap() {
     }).addTo(map);
 
     assignmentLinesLayer = L.layerGroup().addTo(map);
+
+    map.on('click', function () {
+        if (highlightedIncidentId) {
+            highlightMarker(highlightedIncidentId);
+        }
+    });
 }
 
 // ----- Data Loading -----
@@ -119,6 +133,9 @@ function renderMap(data) {
             "Priority: " + inc.priority_score
         );
         incidentMarkers[inc.id] = marker;
+        marker.on('click', function () {
+            highlightMarker(inc.id);
+        });
     });
 
     // Resource markers (coloured by type)
@@ -147,19 +164,13 @@ function renderMap(data) {
             "Status: " + r.status
         );
         resourceMarkers[r.id] = marker;
-    });
-
-    // Assignment lines
-    data.assignments.forEach((a) => {
-        const inc = data.incidents.find((i) => i.id === a.incident_id);
-        const res = data.resources.find((r) => r.id === a.resource_id);
-        if (inc && res) {
-            const lineColor = RESOURCE_COLORS[res.type] || "#3498db";
-            L.polyline(
-                [[inc.lat, inc.lng], [res.lat, res.lng]],
-                { color: lineColor, weight: 2, dashArray: "6, 8", opacity: 0.6 }
-            ).addTo(assignmentLinesLayer);
-        }
+        marker.on('click', function () {
+            if (!currentState) return;
+            var a = currentState.assignments.find(function (x) {
+                return x.resource_id === r.id;
+            });
+            if (a) highlightMarker(a.incident_id);
+        });
     });
 
     // Fit bounds to show all markers
@@ -269,6 +280,52 @@ function toggleBreakdown(incidentId) {
     el.classList.toggle("expanded");
 }
 
+function computeRouteWaypoints(lat1, lng1, lat2, lng2) {
+    var dLat = lat2 - lat1;
+    var dLng = lng2 - lng1;
+    var dist = Math.sqrt(dLat * dLat + dLng * dLng);
+    if (dist === 0) return [[lat1, lng1]];
+    var offset = dist * 0.15;
+    var perpLat = -dLng / dist;
+    var perpLng = dLat / dist;
+    var wp1Lat = lat1 + dLat / 3 + perpLat * offset;
+    var wp1Lng = lng1 + dLng / 3 + perpLng * offset;
+    var wp2Lat = lat1 + (2 * dLat) / 3 - perpLat * offset;
+    var wp2Lng = lng1 + (2 * dLng) / 3 - perpLng * offset;
+    return [
+        [lat1, lng1],
+        [wp1Lat, wp1Lng],
+        [wp2Lat, wp2Lng],
+        [lat2, lng2],
+    ];
+}
+
+function drawAssignmentPath(incidentId) {
+    assignmentLinesLayer.clearLayers();
+    if (!currentState) return;
+    var assignment = currentState.assignments.find(function (a) {
+        return a.incident_id === incidentId;
+    });
+    if (!assignment) return;
+    var inc = currentState.incidents.find(function (i) {
+        return i.id === incidentId;
+    });
+    var res = currentState.resources.find(function (r) {
+        return r.id === assignment.resource_id;
+    });
+    if (!inc || !res) return;
+    var waypoints = computeRouteWaypoints(inc.lat, inc.lng, res.lat, res.lng);
+    var lineColor = RESOURCE_COLORS[res.type] || "#3498db";
+    L.polyline(waypoints, {
+        color: lineColor,
+        weight: 3,
+        opacity: 0.85,
+        dashArray: "10, 6",
+        lineCap: "round",
+        lineJoin: "round",
+    }).addTo(assignmentLinesLayer);
+}
+
 function highlightMarker(incidentId) {
     // Revert previous
     if (highlightedIncidentId && incidentMarkers[highlightedIncidentId]) {
@@ -283,6 +340,10 @@ function highlightMarker(incidentId) {
     // Toggle: if same id clicked again, just deselect
     if (incidentId === highlightedIncidentId) {
         highlightedIncidentId = null;
+        assignmentLinesLayer.clearLayers();
+        document.querySelectorAll(".incident-card.active").forEach(function (c) {
+            c.classList.remove("active");
+        });
         return;
     }
 
@@ -295,6 +356,12 @@ function highlightMarker(incidentId) {
             weight: 3,
         });
         highlightedIncidentId = incidentId;
+        drawAssignmentPath(incidentId);
+        document.querySelectorAll(".incident-card.active").forEach(function (c) {
+            c.classList.remove("active");
+        });
+        var card = document.getElementById("card-" + incidentId);
+        if (card) card.classList.add("active");
     }
 }
 
