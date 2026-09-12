@@ -160,6 +160,11 @@ html, body {
     box-shadow: inset 3px 0 0 var(--amber);
 }
 
+.incident-card.active {
+    border-color: var(--text-secondary);
+    box-shadow: inset 3px 0 0 var(--text-secondary);
+}
+
 .incident-header {
     display: flex;
     align-items: center;
@@ -407,6 +412,44 @@ html, body {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+/* --- Unit Action Buttons --- */
+.unit-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.unit-toggle-btn, .unit-release-btn {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.unit-toggle-btn:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--text-muted);
+}
+
+.unit-release-btn {
+    border-color: var(--amber);
+    color: var(--amber);
+    background: rgba(243, 156, 18, 0.1);
+}
+
+.unit-release-btn:hover {
+    background: rgba(243, 156, 18, 0.25);
+    color: #fff;
+}
+
 
 /* --- Simulate Panel --- */
 #simulate-panel {
@@ -705,4 +748,108 @@ html, body {
 
 .leaflet-popup-close-button:hover {
     color: var(--text-primary) !important;
+}
+
+/* --- Pending candidates + Overridden tag (reuses existing tokens) --- */
+
+.pending-assignment {
+    color: var(--amber) !important;
+}
+
+.pending-assignment strong {
+    color: var(--amber) !important;
+}
+
+.overridden-tag {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(240, 173, 78, 0.18);
+    color: var(--amber);
+    border: 1px solid var(--amber-dark);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.candidate-list {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.candidate-list-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+}
+
+.candidate-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    padding: 4px 6px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+}
+
+.candidate-row.recommended {
+    border-color: var(--available-green);
+}
+
+.candidate-id {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    min-width: 36px;
+    color: var(--text-primary);
+}
+
+.candidate-distance {
+    color: var(--text-secondary);
+    min-width: 60px;
+    font-variant-numeric: tabular-nums;
+}
+
+.candidate-reason {
+    color: var(--text-muted);
+    font-style: italic;
+    flex: 1;
+}
+
+.candidate-confirm-btn {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.candidate-confirm-btn:hover {
+    color: var(--available-green);
+    border-color: var(--available-green);
+    background: rgba(46, 204, 113, 0.1);
+}
+
+.confirm-error-banner {
+    font-size: 11px;
+    color: var(--incident-red);
+    background: rgba(231, 76, 60, 0.1);
+    border: 1px solid var(--incident-red);
+    border-radius: 4px;
+    padding: 4px 6px;
+    margin-bottom: 4px;
 }

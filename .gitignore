@@ -25,6 +25,12 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# ---- Logs ----
+# ---- Logs & Local State ----
 *.log
 logs/
+backend/state.json
+backend/state.json.tmp
+
+# ---- Test / tooling artifacts ----
+.playwright-mcp/
+

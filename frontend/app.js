@@ -29,6 +29,10 @@ const RESOURCE_LABELS = {
     hospital:  "Hospitals",
 };
 
+// ----- State flags for partial-refresh without resetting the whole tree -----
+let assignmentLinesDirty = true;
+let assignmentLinesSnapshot = null;
+
 // ----- Init -----
 document.addEventListener("DOMContentLoaded", init);
 
@@ -40,6 +44,14 @@ async function init() {
     document.getElementById("picker-cancel-btn").addEventListener("click", hidePicker);
     document.getElementById("picker-clear-btn").addEventListener("click", clearPickerSelection);
     document.getElementById("picker-run-btn").addEventListener("click", runPickerAllocation);
+
+    document.getElementById("panel").addEventListener("click", function (e) {
+        if (!e.target.closest(".incident-header") && !e.target.closest(".resource-unit-row")) {
+            if (highlightedIncidentId) {
+                highlightMarker(highlightedIncidentId);
+            }
+        }
+    });
 }
 
 function initMap() {
@@ -60,6 +72,12 @@ function initMap() {
     }).addTo(map);
 
     assignmentLinesLayer = L.layerGroup().addTo(map);
+
+    map.on('click', function () {
+        if (highlightedIncidentId) {
+            highlightMarker(highlightedIncidentId);
+        }
+    });
 }
 
 // ----- Data Loading -----
@@ -119,6 +137,9 @@ function renderMap(data) {
             "Priority: " + inc.priority_score
         );
         incidentMarkers[inc.id] = marker;
+        marker.on('click', function () {
+            highlightMarker(inc.id);
+        });
     });
 
     // Resource markers (coloured by type)
@@ -147,19 +168,13 @@ function renderMap(data) {
             "Status: " + r.status
         );
         resourceMarkers[r.id] = marker;
-    });
-
-    // Assignment lines
-    data.assignments.forEach((a) => {
-        const inc = data.incidents.find((i) => i.id === a.incident_id);
-        const res = data.resources.find((r) => r.id === a.resource_id);
-        if (inc && res) {
-            const lineColor = RESOURCE_COLORS[res.type] || "#3498db";
-            L.polyline(
-                [[inc.lat, inc.lng], [res.lat, res.lng]],
-                { color: lineColor, weight: 2, dashArray: "6, 8", opacity: 0.6 }
-            ).addTo(assignmentLinesLayer);
-        }
+        marker.on('click', function () {
+            if (!currentState) return;
+            var a = currentState.assignments.find(function (x) {
+                return x.resource_id === r.id;
+            });
+            if (a && a.status === "confirmed") highlightMarker(a.incident_id);
+        });
     });
 
     // Fit bounds to show all markers
@@ -197,8 +212,9 @@ function renderIncidentList(data, changes) {
         const assignment = data.assignments.find(
             (a) => a.incident_id === inc.id
         );
+        const isConfirmed = assignment && assignment.status === "confirmed";
         const assignedId = assignment ? assignment.resource_id : "Unassigned";
-        const distance = assignment ? assignment.distance_km + " km" : "";
+        const distance = assignment ? assignment.distance_km.toFixed(2) + " km" : "";
 
         // Header row
         const header = document.createElement("div");
@@ -209,6 +225,9 @@ function renderIncidentList(data, changes) {
                 '<div class="incident-name">' + escapeHtml(inc.name) + "</div>" +
                 '<div class="incident-desc">' + escapeHtml(inc.description) + "</div>" +
             "</div>" +
+            (assignment && assignment.overridden
+                ? '<span class="overridden-tag" title="Manually overridden">Overridden</span>'
+                : "") +
             '<span class="incident-score">' + inc.priority_score + "</span>";
 
         // Breakdown (expandable)
@@ -229,11 +248,45 @@ function renderIncidentList(data, changes) {
                 "<span>Total</span>" +
                 "<span>" + inc.priority_score + "</span>" +
             "</div>";
-        html +=
-            '<div class="incident-assignment">' +
-                "Assigned to: <strong>" + assignedId + "</strong>" +
-                (distance ? " (" + distance + ")" : "") +
-            "</div>";
+
+        if (assignment && assignment.status === "pending") {
+            html +=
+                '<div class="incident-assignment pending-assignment">' +
+                    "Suggested: <strong>" + escapeHtml(assignedId) + "</strong>" +
+                    " (" + distance + ")" +
+                "</div>";
+            html += '<div class="candidate-list" id="candidates-' + inc.id + '">';
+            html +=
+                '<div class="candidate-list-title">Candidate resources</div>';
+            (assignment.candidates || []).forEach((cand) => {
+                const isWinner = cand.resource_id === assignedId;
+                html +=
+                    '<div class="candidate-row' + (isWinner ? " recommended" : "") + '">' +
+                        '<span class="candidate-id">' +
+                            escapeHtml(cand.resource_id) +
+                        "</span>" +
+                        '<span class="candidate-distance">' +
+                            cand.distance_km.toFixed(2) + " km" +
+                        "</span>" +
+                        '<span class="candidate-reason">' +
+                            escapeHtml(cand.reason) +
+                        "</span>" +
+                        '<button class="candidate-confirm-btn" ' +
+                            'data-incident-id="' + escapeHtml(inc.id) + '" ' +
+                            'data-resource-id="' + escapeHtml(cand.resource_id) + '">' +
+                            (isWinner ? "Confirm" : "Confirm this") +
+                        "</button>" +
+                    "</div>";
+            });
+            html += "</div>";
+        } else {
+            html +=
+                '<div class="incident-assignment">' +
+                    "Assigned to: <strong>" + escapeHtml(assignedId) + "</strong>" +
+                    " (" + distance + ")" +
+                "</div>";
+        }
+
         if (change) {
             html +=
                 '<div class="change-label">' +
@@ -246,6 +299,17 @@ function renderIncidentList(data, changes) {
 
         card.appendChild(header);
         card.appendChild(breakdown);
+
+        // Wire up confirm buttons for this card (if any)
+        breakdown.querySelectorAll(".candidate-confirm-btn").forEach((btn) => {
+            btn.addEventListener("click", function (e) {
+                e.stopPropagation();
+                onConfirmOne(
+                    btn.dataset.incidentId,
+                    btn.dataset.resourceId
+                );
+            });
+        });
 
         // Click: expand breakdown + highlight marker
         header.addEventListener("click", function () {
@@ -269,6 +333,52 @@ function toggleBreakdown(incidentId) {
     el.classList.toggle("expanded");
 }
 
+function computeRouteWaypoints(lat1, lng1, lat2, lng2) {
+    var dLat = lat2 - lat1;
+    var dLng = lng2 - lng1;
+    var dist = Math.sqrt(dLat * dLat + dLng * dLng);
+    if (dist === 0) return [[lat1, lng1]];
+    var offset = dist * 0.15;
+    var perpLat = -dLng / dist;
+    var perpLng = dLat / dist;
+    var wp1Lat = lat1 + dLat / 3 + perpLat * offset;
+    var wp1Lng = lng1 + dLng / 3 + perpLng * offset;
+    var wp2Lat = lat1 + (2 * dLat) / 3 - perpLat * offset;
+    var wp2Lng = lng1 + (2 * dLng) / 3 - perpLng * offset;
+    return [
+        [lat1, lng1],
+        [wp1Lat, wp1Lng],
+        [wp2Lat, wp2Lng],
+        [lat2, lng2],
+    ];
+}
+
+function drawAssignmentPath(incidentId) {
+    assignmentLinesLayer.clearLayers();
+    if (!currentState) return;
+    var assignment = currentState.assignments.find(function (a) {
+        return a.incident_id === incidentId;
+    });
+    if (!assignment || assignment.status !== "confirmed") return;
+    var inc = currentState.incidents.find(function (i) {
+        return i.id === incidentId;
+    });
+    var res = currentState.resources.find(function (r) {
+        return r.id === assignment.resource_id;
+    });
+    if (!inc || !res) return;
+    var waypoints = computeRouteWaypoints(inc.lat, inc.lng, res.lat, res.lng);
+    var lineColor = RESOURCE_COLORS[res.type] || "#3498db";
+    L.polyline(waypoints, {
+        color: lineColor,
+        weight: 3,
+        opacity: 0.85,
+        dashArray: "10, 6",
+        lineCap: "round",
+        lineJoin: "round",
+    }).addTo(assignmentLinesLayer);
+}
+
 function highlightMarker(incidentId) {
     // Revert previous
     if (highlightedIncidentId && incidentMarkers[highlightedIncidentId]) {
@@ -283,6 +393,10 @@ function highlightMarker(incidentId) {
     // Toggle: if same id clicked again, just deselect
     if (incidentId === highlightedIncidentId) {
         highlightedIncidentId = null;
+        assignmentLinesLayer.clearLayers();
+        document.querySelectorAll(".incident-card.active").forEach(function (c) {
+            c.classList.remove("active");
+        });
         return;
     }
 
@@ -295,6 +409,12 @@ function highlightMarker(incidentId) {
             weight: 3,
         });
         highlightedIncidentId = incidentId;
+        drawAssignmentPath(incidentId);
+        document.querySelectorAll(".incident-card.active").forEach(function (c) {
+            c.classList.remove("active");
+        });
+        var card = document.getElementById("card-" + incidentId);
+        if (card) card.classList.add("active");
     }
 }
 
@@ -366,6 +486,8 @@ function renderResourceStatus(data) {
 
             var html = '<span class="unit-id">' + escapeHtml(resource.id) + "</span>";
 
+            var actionsHtml = "";
+
             if (resource.status === "busy") {
                 var assignment = data.assignments.find(function (a) {
                     return a.resource_id === resource.id;
@@ -390,8 +512,14 @@ function renderResourceStatus(data) {
                     escapeHtml(incidentName) +
                     (distance ? ", " + distance : "") +
                     "</span>";
+
+                if (assignment) {
+                    actionsHtml += '<button class="unit-release-btn" data-incident-id="' + escapeHtml(assignment.incident_id) + '" title="Release unit from assignment">Release</button>';
+                }
+
                 unitRow.classList.add("clickable");
                 unitRow.addEventListener("click", function (e) {
+                    if (e.target.closest(".unit-release-btn") || e.target.closest(".unit-toggle-btn")) return;
                     e.stopPropagation();
                     if (incident) {
                         highlightMarker(incident.id);
@@ -406,7 +534,39 @@ function renderResourceStatus(data) {
                     "</span>";
             }
 
+            if (resource.type !== "hospital") {
+                if (resource.status === "available") {
+                    actionsHtml += '<button class="unit-toggle-btn" data-action="down" title="Mark unit as unavailable">Down</button>';
+                } else if (resource.status === "unavailable") {
+                    actionsHtml += '<button class="unit-toggle-btn" data-action="up" title="Mark unit as available">Restore</button>';
+                }
+            }
+
+            if (actionsHtml) {
+                html += '<span class="unit-actions">' + actionsHtml + '</span>';
+            }
+
             unitRow.innerHTML = html;
+
+            var toggleBtn = unitRow.querySelector(".unit-toggle-btn");
+            if (toggleBtn) {
+                toggleBtn.addEventListener("click", function (e) {
+                    e.stopPropagation();
+                    var action = toggleBtn.dataset.action;
+                    var newStatus = action === "down" ? "unavailable" : "available";
+                    patchResource(resource.id, { status: newStatus });
+                });
+            }
+
+            var releaseBtn = unitRow.querySelector(".unit-release-btn");
+            if (releaseBtn) {
+                releaseBtn.addEventListener("click", function (e) {
+                    e.stopPropagation();
+                    var incId = releaseBtn.dataset.incidentId;
+                    postDeallocate(incId);
+                });
+            }
+
             drilldownContent.appendChild(unitRow);
         });
 
@@ -419,6 +579,47 @@ function renderResourceStatus(data) {
         container.appendChild(drilldown);
     });
 }
+
+async function patchResource(resourceId, payload) {
+    try {
+        const res = await fetch("/api/resources/" + encodeURIComponent(resourceId), {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+            const err = await res.json();
+            console.error("Failed to patch resource:", err);
+            return;
+        }
+        const result = await res.json();
+        currentState = result.state;
+        renderAll(currentState, result.changes);
+        if (typeof renderPicker === "function") renderPicker();
+    } catch (e) {
+        console.error("Error patching resource:", e);
+    }
+}
+
+async function postDeallocate(incidentId) {
+    try {
+        const res = await fetch("/api/deallocate/" + encodeURIComponent(incidentId), {
+            method: "POST",
+        });
+        if (!res.ok) {
+            const err = await res.json();
+            console.error("Failed to deallocate incident:", err);
+            return;
+        }
+        const result = await res.json();
+        currentState = result.state;
+        renderAll(currentState, result.changes);
+        if (typeof renderPicker === "function") renderPicker();
+    } catch (e) {
+        console.error("Error deallocating incident:", e);
+    }
+}
+
 
 function toggleResourceDrilldown(type) {
     const drilldown = document.getElementById("drilldown-" + type);
@@ -621,13 +822,11 @@ async function onReset() {
 
         renderAll(currentState);
 
-        // Restore buttons
         document.getElementById("simulate-btn").textContent =
             "Simulate Resource Unavailable";
         document.getElementById("simulate-btn").disabled = false;
         document.getElementById("changes-display").innerHTML = "";
 
-        // Refresh the picker (in case it is open)
         const picker = document.getElementById("resource-picker");
         if (picker && !picker.classList.contains("hidden")) {
             renderPicker();
@@ -636,6 +835,50 @@ async function onReset() {
         resetBtn.disabled = false;
         console.error("Reset failed:", err);
     }
+}
+
+// ----- Confirm (single) -----
+async function onConfirmOne(incidentId, resourceId) {
+    try {
+        const res = await fetch("/api/confirm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify([{ incident_id: incidentId, resource_id: resourceId }]),
+        });
+        if (!res.ok) {
+            const detail = await safeDetail(res);
+            showConfirmError(incidentId, detail || ("HTTP " + res.status));
+            return;
+        }
+        const result = await res.json();
+        currentState = result.state;
+        renderAll(currentState);
+    } catch (err) {
+        console.error("Confirm failed:", err);
+    }
+}
+
+async function safeDetail(res) {
+    try {
+        const body = await res.json();
+        return body.detail || JSON.stringify(body);
+    } catch (e) {
+        return null;
+    }
+}
+
+function showConfirmError(incidentId, message) {
+    const card = document.getElementById("card-" + incidentId);
+    if (!card) return;
+    const list = card.querySelector(".candidate-list");
+    if (!list) return;
+    let banner = list.querySelector(".confirm-error-banner");
+    if (!banner) {
+        banner = document.createElement("div");
+        banner.className = "confirm-error-banner";
+        list.insertBefore(banner, list.firstChild);
+    }
+    banner.textContent = "Cannot confirm: " + message;
 }
 
 // ----- Utility -----

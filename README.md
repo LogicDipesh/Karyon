@@ -61,9 +61,8 @@ resq/
 │   ├── app.js             # Map + panel rendering, simulate/reset logic
 │   └── style.css          # Dark theme, flat panels, layout
 ├── requirements.txt       # fastapi, uvicorn[standard]
-├── implementation_plan.md # Original build plan
-├── resq-antigravity-brief.md # Build brief / spec
-└── completion-report.md   # Post-build summary
+└── plans/
+    └── allocation_deallocation.md # Dynamic resource allocation plan
 ```
 
 ---
@@ -165,20 +164,25 @@ Base URL: `http://127.0.0.1:8000`
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/api/state` | Full current state: incidents (scored + assigned), resources (statuses), zone polygon, assignments |
-| `POST` | `/api/simulate` | **Backward-compatible.** Marks Ambulance A02 unavailable, re-runs allocation, returns `{ state, changes, unavailable_resource_ids }` |
-| `POST` | `/api/allocate` | Mark any set of resources unavailable, re-run allocation. Body: `{"unavailable_resource_ids": ["A02", "N01"]}`. Returns `{ state, changes, unavailable_resource_ids }`. Hospital IDs in the list are ignored |
-| `POST` | `/api/reset` | Re-seed from `data.json`, recompute everything, return fresh `state` |
+| `PATCH` | `/api/resources/{id}` | Change resource availability. Body: `{"status": "available" \| "unavailable"}` |
+| `POST` | `/api/deallocate/{incident_id}` | Free an incident's assigned resource and re-run allocation |
+| `POST` | `/api/allocate` | Mark any set of resources unavailable, re-run allocation. Body: `{"unavailable_resource_ids": ["A02", "N01"]}` |
+| `POST` | `/api/simulate` | **Backward-compatible.** Marks Ambulance A02 unavailable, re-runs allocation |
+| `POST` | `/api/confirm` | Batch-confirm proposed allocations |
+| `POST | `/api/override` | Manually override incident assignment |
+| `POST` | `/api/reset` | Re-seed from `data.json`, clear `state.json`, return fresh state |
 
 Example:
 
 ```bash
 curl http://127.0.0.1:8000/api/state
-curl -X POST http://127.0.0.1:8000/api/simulate
-curl -X POST -H "Content-Type: application/json" \
-     -d '{"unavailable_resource_ids":["A02","N01","F01"]}' \
-     http://127.0.0.1:8000/api/allocate
+curl -X PATCH -H "Content-Type: application/json" \
+     -d '{"status":"unavailable"}' \
+     http://127.0.0.1:8000/api/resources/A02
+curl -X POST http://127.0.0.1:8000/api/deallocate/INC-001
 curl -X POST http://127.0.0.1:8000/api/reset
 ```
+
 
 ---
 
