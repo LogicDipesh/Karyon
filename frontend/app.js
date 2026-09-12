@@ -19,7 +19,7 @@ const RESOURCE_COLORS = {
     ambulance: "#3498db",
     ndrf:      "#2ecc71",
     fire:      "#e67e22",
-    hospital:  "#ecf0f1",
+    hospital:  "#9b59b6",
 };
 
 const RESOURCE_LABELS = {
@@ -32,6 +32,11 @@ const RESOURCE_LABELS = {
 // ----- State flags for partial-refresh without resetting the whole tree -----
 let assignmentLinesDirty = true;
 let assignmentLinesSnapshot = null;
+
+// Resource types whose marker fill is light enough to need near-black label text
+const MARKER_LABEL_DARK_TYPES = {
+    ndrf: true,
+};
 
 // ----- Init -----
 document.addEventListener("DOMContentLoaded", init);
@@ -122,6 +127,15 @@ function renderMap(data) {
         }).addTo(map);
     }
 
+    // Priority rank per incident — matches the "#N" numbering in the
+    // Priority Incidents list (sorted by priority score, highest first).
+    const rankByIncidentId = {};
+    [...data.incidents]
+        .sort((a, b) => b.priority_score - a.priority_score)
+        .forEach((inc, i) => {
+            rankByIncidentId[inc.id] = i + 1;
+        });
+
     // Incident markers (red circles)
     data.incidents.forEach((inc) => {
         const marker = L.circleMarker([inc.lat, inc.lng], {
@@ -131,6 +145,11 @@ function renderMap(data) {
             weight: 2,
             fillOpacity: 0.9,
         }).addTo(map);
+        marker.bindTooltip(String(rankByIncidentId[inc.id] || ""), {
+            permanent: true,
+            direction: "center",
+            className: "map-marker-label map-marker-label-light",
+        });
         marker.bindPopup(
             "<strong>" + escapeHtml(inc.name) + "</strong><br>" +
             "<em>" + escapeHtml(inc.description) + "</em><br>" +
@@ -144,6 +163,7 @@ function renderMap(data) {
 
     // Resource markers (coloured by type)
     data.resources.forEach((r) => {
+        const isHospital = r.type === "hospital";
         const baseColor = RESOURCE_COLORS[r.type] || "#95a5a6";
         let fillColor = baseColor;
         let opacity = 0.9;
@@ -153,15 +173,34 @@ function renderMap(data) {
         } else if (r.status === "busy") {
             opacity = 0.7;
         }
-        const radius = r.type === "hospital" ? 12 : 8;
+        // Enlarge the coloured circle slightly so the type-colour fill stays
+        // visible as a ring around the centred ID label.
+        const radius = isHospital ? 14 : 10;
+
+        // Hospitals: violet fill + border — distinct from every other marker
+        // colour (red/blue/green/orange) and readable on the light basemap.
+        const borderColor = isHospital ? "#8e44ad" : "#1a2733";
+        if (isHospital) fillColor = "#9b59b6";
 
         const marker = L.circleMarker([r.lat, r.lng], {
             radius: radius,
             fillColor: fillColor,
-            color: "#1a2733",
+            color: borderColor,
             weight: 2,
             fillOpacity: opacity,
         }).addTo(map);
+        marker.bindTooltip(escapeHtml(r.id), {
+            permanent: true,
+            // Centred horizontally, shifted up above the circle so the full
+            // type-colour fill and border stay visible beneath the label.
+            direction: "center",
+            offset: [0, -(radius + 8)],
+            className:
+                "map-marker-label map-marker-label-resource " +
+                (MARKER_LABEL_DARK_TYPES[r.type]
+                    ? "map-marker-label-dark"
+                    : "map-marker-label-light"),
+        });
         marker.bindPopup(
             "<strong>" + r.id + "</strong><br>" +
             "Type: " + r.type + "<br>" +

@@ -853,3 +853,35 @@ html, body {
     padding: 4px 6px;
     margin-bottom: 4px;
 }
+
+/* --- Permanent On-Marker Labels --- */
+.map-marker-label {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.2px;
+    font-family: inherit;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    text-shadow:
+        0 0 3px rgba(0, 0, 0, 0.85),
+        0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.map-marker-label-resource {
+    font-size: 10px;
+    letter-spacing: 0.1px;
+}
+
+.map-marker-label-dark {
+    color: #0f1923;
+    text-shadow:
+        0 0 3px rgba(255, 255, 255, 0.6),
+        0 1px 2px rgba(255, 255, 255, 0.5);
+}
