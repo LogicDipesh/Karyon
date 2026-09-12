@@ -236,6 +236,41 @@ Simulate and reset **re-run this whole loop from scratch** on the current datase
 
 ---
 
+## Release Notes
+
+### v1.2.0 (2026-09-12) — Manual Allocation & Map Labels
+
+**New Features**
+- **Manual resource override** — Coordinators can now manually assign any available resource to any incident via the new `/api/override` endpoint and UI picker, bypassing the greedy allocator for edge cases
+- **Deallocation API** — Free a specific incident's assigned resource and re-run allocation with `POST /api/deallocate/{incident_id}`
+- **Batch confirm endpoint** — `POST /api/confirm` accepts proposed allocations for audit trails
+- **On-marker labels** — Incident markers now show permanent rank labels (#1–5) matching the Priority Incidents list order; resource markers show permanent ID labels (A01, N01, etc.) positioned above the circle so type-color fill stays visible
+- **Hospital violet color coding** — Hospitals now use a distinct violet fill (#9b59b6) with darker border (#8e44ad), separate from ambulance blue / NDRF green / fire orange / incident red; label halo text-shadow added for legibility on light OSM basemap
+- **Label consistency** — `RESOURCE_COLORS.hospital` updated to violet for panel consistency; hospital removed from `MARKER_LABEL_DARK_TYPES` (white label text on violet fill)
+
+**Changes**
+- Simulate / Reset flow reworked: Simulate now opens a category-grouped resource picker (Ambulances, NDRF Teams, Fire Units) with individual toggles; Hospitals shown for reference but not selectable
+- Click-to-highlight assignment routes: click an incident or resource (map marker, panel row, or card) to draw a dashed route path colored by resource type; click again or click empty map area to clear
+- Resource Status panel drill-down: click a row to expand per-unit listing with status, assigned incident, and distance; click a busy unit to highlight its incident and draw the dispatch route
+- Priority Incidents panel: score breakdown now shows per-term `+value` contributions and total; clicking a card highlights the map marker and draws the route
+
+**Internal**
+- Stash diff applied (1300+ lines): manual allocation logic, deallocation, override endpoints, and UI wiring consolidated
+- Removed temporary `stash_diff.txt` artifact from repo
+
+### v1.1.0 (2026-09-09) — Click-to-Highlight Assignment Routes
+
+**New Features**
+- Click any incident or resource marker, panel row, or card to highlight it and draw a dashed route path to its allocated partner
+- Route paths bend through two intermediate waypoints (client-side math, no routing API) and are colored by resource type
+- Click the same item again, or click an empty map area, to clear the route
+- Unassigned incidents highlight without a path
+
+**Documentation**
+- Updated README with click-to-highlight feature details and project structure
+
+---
+
 ## License
 
 This project is provided as a demo/hackathon build. You are free to use and modify it for your own
