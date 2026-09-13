@@ -1,5 +1,5 @@
 /* ============================================================
-   ResQ — Dark Theme, Flat Panels, System Fonts
+   Karyon — Dark Theme, Flat Panels, System Fonts
    ============================================================ */
 
 /* --- Reset & Variables --- */
@@ -604,6 +604,28 @@ html, body {
     color: var(--unavailable-grey);
 }
 
+.pick.legend-item span {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.incident-marker-icon {
+    border-radius: 50%;
+    border: 2px solid #fff;
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 5px rgba(0,0,0,0.6);
+    width: 28px;
+    height: 28px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
 .picker-actions {
     display: flex;
     gap: 6px;
@@ -711,3 +733,245 @@ html, body {
 .leaflet-popup-close-button:hover {
     color: var(--text-primary) !important;
 }
+
+/* ============================================================
+   Karyon Additions — Map Controls, AI Panel & Task Completion
+   ============================================================ */
+
+/* --- Map Controls Floating Switch --- */
+#map-controls {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 1000;
+    background: rgba(26, 39, 51, 0.92);
+    backdrop-filter: blur(4px);
+    padding: 7px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.toggle-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    user-select: none;
+}
+
+.toggle-control input[type="checkbox"] {
+    accent-color: #3498db;
+    cursor: pointer;
+    width: 15px;
+    height: 15px;
+}
+
+/* --- Section Header Row --- */
+.section-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.action-small-btn {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.action-small-btn:hover {
+    background: #2c3e50;
+    color: var(--text-primary);
+    border-color: #3498db;
+}
+
+/* --- AI Panel --- */
+#ai-section {
+    border-bottom: 1px solid var(--border);
+}
+
+#ai-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* AI Plan Display Box */
+.ai-plan-box {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    max-height: 180px;
+    overflow-y: auto;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text-primary);
+}
+
+.ai-plan-box h2, .ai-plan-box h3, .ai-plan-box h4 {
+    color: #3498db;
+    margin: 8px 0 4px 0;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ai-plan-box h2:first-child, .ai-plan-box h3:first-child, .ai-plan-box h4:first-child {
+    margin-top: 0;
+}
+
+.ai-plan-box ul {
+    margin: 4px 0 6px 18px;
+    padding: 0;
+}
+
+.ai-plan-box li {
+    margin-bottom: 3px;
+}
+
+.ai-plan-box strong {
+    color: #ecf0f1;
+}
+
+/* AI Overwrite Textarea & Actions */
+.ai-overwrite-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.overwrite-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+#ai-overwrite-input {
+    width: 100%;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    border-radius: 4px;
+    padding: 7px 9px;
+    font-family: inherit;
+    font-size: 12px;
+    resize: vertical;
+    outline: none;
+    line-height: 1.4;
+}
+
+#ai-overwrite-input:focus {
+    border-color: #3498db;
+}
+
+.overwrite-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.overwrite-actions button.primary {
+    background: #2980b9;
+    border: 1px solid #3498db;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.overwrite-actions button.primary:hover {
+    background: #3498db;
+}
+
+.status-indicator {
+    font-size: 11px;
+    color: #2ecc71;
+}
+
+/* --- Task Completion Actions & Badges --- */
+.incident-actions-row {
+    margin-top: 8px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.complete-task-btn {
+    background: rgba(46, 204, 113, 0.15);
+    border: 1px solid #2ecc71;
+    color: #2ecc71;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 11px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.complete-task-btn:hover {
+    background: #2ecc71;
+    color: #0f1923;
+}
+
+.popup-complete-btn {
+    margin-top: 8px;
+    background: #2ecc71;
+    color: #0f1923;
+    border: none;
+    font-weight: 600;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.popup-complete-btn:hover {
+    background: #27ae60;
+}
+
+.incident-card.completed {
+    opacity: 0.6;
+    border-left-color: #2ecc71 !important;
+    background: rgba(36, 52, 66, 0.4);
+}
+
+.completed-rank {
+    background: #2ecc71 !important;
+    color: #0f1923 !important;
+    font-weight: 700;
+}
+
+.completed-score {
+    background: rgba(46, 204, 113, 0.2);
+    color: #2ecc71 !important;
+    border: 1px solid #2ecc71;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.task-resolved-label {
+    font-size: 11px;
+    color: #2ecc71;
+    font-weight: 500;
+    margin-top: 6px;
+}
+
+.task-resolved-summary, .ai-applied-summary {
+    color: #2ecc71;
+    font-weight: 500;
+}
+

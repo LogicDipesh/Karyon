@@ -1,36 +1,31 @@
-# ResQ — AI-Assisted Disaster Response Coordination
+# Karyon — AI-Assisted Disaster Response Coordination
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-3498db) ![FastAPI](https://img.shields.io/badge/FastAPI-2ecc71)
+![Python](https://img.shields.io/badge/Python-3.10%2B-3498db) ![FastAPI](https://img.shields.io/badge/FastAPI-2ecc71) ![Gemini](https://img.shields.io/badge/Google%20Gemini-Integrated-8e44ad)
 
-ResQ is a decision-support dashboard for disaster-response coordinators. It takes a set of
-incoming emergency incidents, scores and ranks them by priority, and allocates available response
-resources to each one — all on a live interactive map.
+Karyon is an intelligent decision-support dashboard for disaster-response coordinators. It takes incoming emergency incidents, scores and ranks them by priority, and allocates available response resources to each one on a live interactive map — with active assignment route tracking, Gemini AI situational planning, and a bidirectional NLP overwrite engine.
 
-It was designed as a **hackathon demo** for a hardcoded **Delhi Flood** scenario, but its scoring
-and allocation logic are generic and easy to re-seed with new data.
+It was designed as an operations center for a **Delhi Flood** scenario, with generic scoring, allocation, and natural language command processing.
 
-> **Important — please read:** Priority scores are computed from a configurable response policy,
-> **not** a validated medical or scientific ranking. A human coordinator always makes the final call.
+> **Important — please read:** Priority scores and AI suggestions are decision-support aids from a configurable response policy. A human coordinator always makes the final call and can overwrite any plan directly through natural language.
 
 ---
 
 ## Features
 
-- **Interactive map** (Leaflet + OpenStreetMap tiles, no API key)
-  - Red incident markers, colored resource markers by type, flood-zone polygon overlay
-  - **Click-to-highlight assignment routes** — click an incident or resource to draw the dashed
-    route path to its allocated partner (colored by resource type)
-  - Click a marker for a popup with details
-- **Priority Incidents panel** — incidents ranked highest-first, each expandable to show a plain-language
-  score breakdown and its assigned resource
-- **Resource Status panel** — live available / busy / unavailable counts per resource type, with a
-  click-to-expand **drill-down** listing every individual unit and, for busy units, which incident they're
-  assigned to and the dispatch distance
-- **Simulate / Reset** — open a resource picker to mark any combination of ambulances, NDRF teams,
-  or fire units as unavailable, re-run allocation, and diff what changed. Reset restores the
-  initial state
-- **Explanable, transparent logic** — scoring formula and greedy allocation are simple, in-code, and
-  visible in the UI
+- **Active Assignment Routes & Task Completion**
+  - Live dashed route paths connect allocated units to their incidents on the map.
+  - **Show Active Assignment Routes** toggle switch on the map to switch between full mission overview and selected-only view.
+  - **✓ Complete Task** button on incident cards and map popups marks missions completed, immediately frees the allocated unit, and dismisses the route line.
+- **AI Tactical Plan & NLP Overwrite Box**
+  - **Gemini Response Briefing:** Automatically generates a structured operational briefing (situational assessment, dispatch justification, bottleneck alerts, and directives). Supports free Gemini API keys entered in UI or via `GEMINI_API_KEY`.
+  - **NLP Overwrite Engine:** Coordinators can overwrite the plan or issue natural language commands (e.g., *"Move Fatima to priority #1"*, *"Assign N01 to Fatima"*, *"Complete task for Ramesh"*, *"Mark A02 unavailable"*).
+  - Uses Gemini structured JSON parsing with a deterministic local regex fallback for offline/instant execution.
+- **Interactive map** (Leaflet + OpenStreetMap tiles, no API key required for base map)
+  - Red incident markers, colored resource markers by type, flood-zone polygon overlay.
+  - Click any marker or panel card to inspect details and highlight route waypoints.
+- **Priority Incidents panel** — incidents ranked highest-first, each expandable to show score breakdowns, assigned units, and task completion controls.
+- **Resource Status drill-down** — live available / busy / down counts per unit type with drill-down details.
+- **Simulate / Reset** — interactive resource picker to simulate units going offline, re-run allocation, and diff state changes.
 
 ---
 
@@ -38,29 +33,29 @@ and allocation logic are generic and easy to re-seed with new data.
 
 | Layer | Choice | Notes |
 |---|---|---|
-| Backend | Python + FastAPI | Single-file app, in-memory state |
-| Data | JSON seed file | `backend/data.json`, no database |
-| Frontend | Plain HTML / CSS / JS | Dark theme, flat panels |
+| Backend | Python + FastAPI | Single-server app, in-memory state |
+| AI / NLP | Google Gemini + Rule Engine | Structured plan generation & command parsing |
+| Data | JSON seed file | `backend/data.json`, no database required |
+| Frontend | Plain HTML / CSS / JS | Dark theme, responsive operations console |
 | Map | Leaflet 1.9.4 + OSM tiles | Only external CDN (free, no key) |
-| Distance | Haversine (straight-line); visual waypoints are client-side math | No routing/GSM API |
-
-**Only two Python dependencies:** `fastapi` and `uvicorn[standard]`.
+| Distance | Haversine (straight-line) + Bezier waypoints | Client-side visual paths, no routing API needed |
 
 ---
 
 ## Project Structure
 
 ```
-resq/
+karyon/
 ├── backend/
-│   ├── main.py            # FastAPI app: routes + static file serving + entry point
+│   ├── main.py            # FastAPI app: API routes + static file serving + entry point
+│   ├── ai_service.py      # Gemini tactical planning & NLP overwrite engine
 │   ├── scoring.py         # Priority scoring formula
 │   ├── allocation.py      # Greedy nearest-feasible resource allocation
 │   └── data.json          # Seed data: incidents, resources, zone polygon
 ├── frontend/
 │   ├── index.html         # Single-page dashboard shell
-│   ├── app.js             # Map + panels, simulate/reset, click-to-highlight routes
-│   └── style.css          # Dark theme, flat panels, layout
+│   ├── app.js             # Map, active routes, task completion, AI plan & overwrite
+│   └── style.css          # Dark operations theme, AI console, route controls
 └── requirements.txt       # fastapi, uvicorn[standard]
 ```
 

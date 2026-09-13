@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="ResQ — AI-Assisted Disaster Response Coordination Dashboard for Delhi Flood scenario">
-    <title>ResQ — Disaster Response Coordinator</title>
+    <meta name="description" content="Karyon — AI-Assisted Disaster Response Coordination Dashboard for Delhi Flood scenario">
+    <title>Karyon — Disaster Response Coordinator</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
 </head>
@@ -13,7 +13,7 @@
     <header id="header">
         <div class="header-content">
             <div class="header-title">
-                <h1>ResQ</h1>
+                <h1>Karyon</h1>
                 <span class="header-subtitle">Disaster Response Coordinator</span>
             </div>
             <p class="disclaimer">
@@ -27,9 +27,43 @@
     <main id="dashboard">
         <section id="map-container">
             <div id="map"></div>
+            <div id="map-controls">
+                <label class="toggle-control" title="Toggle route lines for all active assignments">
+                    <input type="checkbox" id="toggle-all-routes" checked>
+                    <span class="toggle-label">Show Active Assignment Routes</span>
+                </label>
+            </div>
         </section>
 
         <aside id="panel">
+            <section class="panel-section" id="ai-section">
+                <div class="section-header-row">
+                    <h2 class="section-title">AI Tactical Plan &amp; NLP Overwrite</h2>
+                    <button id="ai-regen-btn" class="action-small-btn" title="Regenerate situational plan">↻ Regenerate</button>
+                </div>
+                <div id="ai-panel">
+                    <div id="ai-apikey-container" style="margin-bottom: 10px; display: flex; gap: 5px;">
+                        <input type="password" id="api-key-input" placeholder="Enter Google Gemini API Key" style="flex: 1; padding: 4px 8px; border: 1px solid #bdc3c7; border-radius: 4px; font-size: 12px;">
+                        <button id="save-api-key" class="action-small-btn" style="background: #2ecc71; border-color: #27ae60;">Save</button>
+                    </div>
+                    <div id="ai-plan-container" class="ai-plan-box">
+                        <div id="ai-plan-content">
+                            <p class="loading-message">Initializing operational response plan…</p>
+                        </div>
+                    </div>
+                    <div class="ai-overwrite-container">
+                        <label for="ai-overwrite-input" class="overwrite-label">
+                            <span>Commander Overwrite &amp; Natural Language Commands:</span>
+                        </label>
+                        <textarea id="ai-overwrite-input" rows="2" placeholder="e.g. 'Move Fatima to priority #1' or 'Assign N01 to Fatima' or 'Complete task for Ramesh'"></textarea>
+                        <div class="overwrite-actions">
+                            <button id="ai-apply-btn" class="primary">Apply Overwrite</button>
+                            <span id="ai-status-msg" class="status-indicator"></span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section class="panel-section" id="incident-section">
                 <h2 class="section-title">Priority Incidents</h2>
                 <div id="incident-list">
@@ -45,11 +79,14 @@
             </section>
 
             <section class="panel-section" id="simulate-section">
-                <h2 class="section-title">Simulation</h2>
+                <h2 class="section-title">Simulation & Environment</h2>
                 <div id="simulate-panel">
+                    <div id="env-display" style="font-size: 12px; color: #3498db; margin-bottom: 10px; font-weight: 500;">
+                        Environment: Water Level <span id="env-water">150</span>cm | +<span id="env-hours">0</span>h
+                    </div>
                     <div class="sim-buttons">
-                        <button id="simulate-btn">Simulate Resource Unavailable</button>
-                        <button id="reset-btn" disabled>Reset</button>
+                        <button id="simulate-btn" class="action-btn primary">▶ Run Sim Step</button>
+                        <button id="reset-btn" class="action-btn danger" style="background-color: #e74c3c; color: white; margin-left: 8px;">↺ Total Reset</button>
                     </div>
                     <div id="resource-picker" class="resource-picker hidden">
                         <p class="picker-hint">Select resources to mark unavailable, then run allocation.</p>
