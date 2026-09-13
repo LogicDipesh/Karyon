@@ -24,8 +24,6 @@ During severe natural disasters like urban flooding, emergency response centers 
   * **Predictive Analytics:** Monitors environmental data (water level, time elapsed). If flood waters cross critical thresholds (e.g., >180cm), the AI proactively warns the commander to stage resources.
 * 🗣️ **NLP Overwrite Engine**
   * Coordinators can override the AI plan using natural language commands like: *"Move Fatima to priority #1"*, *"Assign N01 to Ramesh"*, or *"Mark Ambulance A02 unavailable"*.
-* 🗺️ **Real-World Live Routing (OSRM Integration)**
-  * Replaces naive straight-line distances with **real-world driving routes** using the Open Source Routing Machine (OSRM) API. Click on any dispatched route to see the exact driving distance and real-time ETA in minutes.
 * 🔒 **Secure Command Dashboard**
   * Protected by a custom HTTP middleware login gate. Prevents unauthorized access to the operations center using hashed session cookies.
 * 🚀 **Interactive Live Map & Simulation**
