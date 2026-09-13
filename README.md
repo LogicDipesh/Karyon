@@ -1,6 +1,6 @@
 # Karyon 🌊🚁
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-3498db?style=for-the-badge&logo=python&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-2ecc71?style=for-the-badge&logo=fastapi&logoColor=white) ![Gemini](https://img.shields.io/badge/Google%20Gemini-Integrated-8e44ad?style=for-the-badge) ![OSRM](https://img.shields.io/badge/OSRM-Routing-f39c12?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3.10%2B-3498db?style=for-the-badge&logo=python&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-2ecc71?style=for-the-badge&logo=fastapi&logoColor=white) ![Gemini](https://img.shields.io/badge/Google%20Gemini-Integrated-8e44ad?style=for-the-badge)
 
 **Karyon** is an intelligent, real-time decision-support dashboard built for disaster-response coordinators. Designed initially for a **Delhi Flood** scenario, Karyon ingests emergency incidents, prioritizes them using a robust scoring engine, and optimally allocates rescue resources (Ambulances, NDRF boats, Fire trucks) on a live interactive map.
 
